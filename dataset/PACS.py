@@ -1,7 +1,7 @@
 import torch
 import os
 import torchvision.transforms as T
-from dataset.utils import BaseDataset #, DomainAdaptationDataset, DomainGeneralizationDataset
+from dataset.utils import BaseDataset , DomainAdaptationDataset #, DomainGeneralizationDataset
 from dataset.utils import SeededDataLoader
 
 from globals import CONFIG
@@ -52,7 +52,28 @@ def load_data():
         test_dataset = BaseDataset(target_examples, transform=test_transform)
 
     ######################################################
-    #elif... TODO: Add here how to create the Dataset object for the other experiments
+    elif CONFIG.experiment in ['activation_shaping_module']:
+      source_examples, target_examples = [], []
+
+      # Load source
+      with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['source_domain']}.txt"), 'r') as f:
+          lines = f.readlines()
+      for line in lines:
+          line = line.strip().split()
+          path, label = line[0].split('/')[1:], int(line[1])
+          source_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
+
+      # Load target
+      with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['target_domain']}.txt"), 'r') as f:
+          lines = f.readlines()
+      for line in lines:
+          line = line.strip().split()
+          path, label = line[0].split('/')[1:], int(line[1])
+          target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
+
+      train_dataset = DomainAdaptationDataset(source_examples, transform=train_transform)
+      test_dataset = DomainAdaptationDataset(target_examples, transform=test_transform)
+
 
 
     ######################################################
