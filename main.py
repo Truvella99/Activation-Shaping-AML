@@ -66,7 +66,11 @@ def train(model, data):
                     x, y = batch
                     x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                     loss = F.cross_entropy(model(x), y)
-
+                elif CONFIG.experiment in ['activation_shaping_module']:
+                    src_x, src_y, target_x = batch
+                    src_x, src_y, target_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), target_x.to(CONFIG.device)
+                    print(src_y)
+                    loss = F.cross_entropy(model(src_x, src_y, target_x), src_y)
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
 

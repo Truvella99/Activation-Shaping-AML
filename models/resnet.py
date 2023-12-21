@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
+from globals import CONFIG
 
 class BaseResNet18(nn.Module):
     def __init__(self):
@@ -21,7 +22,7 @@ def activation_shaping_hook(module, input, output):
     output_A = torch.where(output <= 0, 0.0, 1.0)
     M = module.target_activation_maps.pop(0)
     M = torch.where(M <= 0, 0.0, 1.0)
-    return output_A * M
+    module.product.append(output_A * M)
 #
 ######################################################
 # TODO: modify 'BaseResNet18' including the Activation Shaping Module
@@ -32,6 +33,7 @@ class ASHResNet18(nn.Module):
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         self.target_activation_maps = []
         self.hooks = []
+        self.product = []
     
     def forward(self, src_x, src_y, targ_x):
         self.target_activation_maps.append(targ_x)
@@ -40,5 +42,6 @@ class ASHResNet18(nn.Module):
             self.hooks.append(layer.register_forward_hook(activation_shaping_hook))
         for h in self.hooks:
           h.remove()
+        return self.resnet(src_x) #torch.tensor(self.product.pop(0)).to(CONFIG.device)
 
 ######################################################

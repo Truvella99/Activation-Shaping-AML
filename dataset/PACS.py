@@ -71,8 +71,8 @@ def load_data():
           path, label = line[0].split('/')[1:], int(line[1])
           target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
 
-      train_dataset = DomainAdaptationDataset(source_examples, transform=train_transform)
-      test_dataset = DomainAdaptationDataset(target_examples, transform=test_transform)
+      train_dataset = DomainAdaptationDataset(source_examples, target_examples, transform=train_transform)
+      test_dataset = DomainAdaptationDataset(source_examples, target_examples, transform=train_transform)
 
 
 
