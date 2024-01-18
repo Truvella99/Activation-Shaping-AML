@@ -24,10 +24,10 @@ def evaluate(model, data):
     acc_meter = acc_meter.to(CONFIG.device)
 
     loss = [0.0, 0]
-    for x, y in tqdm(data):
+    for x, y,targ_x in tqdm(data):
         with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-            x, y = x.to(CONFIG.device), y.to(CONFIG.device)
-            logits = model(x)
+            x, y,targ_x = x.to(CONFIG.device), y.to(CONFIG.device), targ_x.to(CONFIG.device)
+            logits = model(x,targ_x)
             acc_meter.update(logits, y)
             loss[0] += F.cross_entropy(logits, y).item()
             loss[1] += x.size(0)
@@ -69,8 +69,12 @@ def train(model, data):
                 elif CONFIG.experiment in ['activation_shaping_module']:
                     src_x, src_y, target_x = batch
                     src_x, src_y, target_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), target_x.to(CONFIG.device)
-                    print(src_y)
-                    loss = F.cross_entropy(model(src_x, src_y, target_x), src_y)
+                    output = model(src_x, target_x)
+
+                    # Calculate cross-entropy loss
+                    loss = F.cross_entropy(output, src_y)
+
+
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
 
