@@ -34,7 +34,6 @@ def activation_shaping_hook2(module, input, output):
 #
 ######################################################
 # TODO: modify 'BaseResNet18' including the Activation Shaping Module
-
 class ASHResNet18(nn.Module):
     def __init__(self):
         super(ASHResNet18, self).__init__()
@@ -53,31 +52,78 @@ class ASHResNet18(nn.Module):
         return result
 
     def forward(self, src_x, targ_x):
+
+        # Aggiungi hook per ottenere target_activation_maps
+        for name, layer in self.resnet.named_children():
+            if isinstance(layer, nn.Conv2d):
+                layer.register_forward_hook(self.activation_shaping_hook)
+                self.resnet(targ_x)
+
+        # Esegui l'input attraverso il modello
+ 
+
+        print("target_activation_maps")
+        # Apply the activation shaping function to the source data
+        for name, layer in self.resnet.named_children():
+            if isinstance(layer, nn.Conv2d):
+                layer.register_forward_hook(self.activation_shaping_hook2)
+                """hooks2.append(layer.register_forward_hook(self.activation_shaping_hook2))
+                layer(src_x)"""
+                self.resnet(src_x)
+        print("product")
+
+        
+        #src_x = src_x.view(src_x.shape[0] , -1)
+        #src_x = self.resnet.fc(src_x)
+        
+        # Return the final result
+        return self.resnet(src_x)
+
+
+
+# versione funzionante ma non troppo
+class ASHResNet18Bis(nn.Module):
+    def __init__(self):
+        super(ASHResNet18, self).__init__()
+        self.resnet = resnet18(weights=ResNet18_Weights)
+        self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
+        self.target_activation_maps = []
+
+    def activation_shaping_hook(self, module, input, output):
+        self.target_activation_maps.append(output.clone().detach())
+
+    def activation_shaping_hook2(self, module, input, output):
+        output_A = torch.where(output <= 0, 0.0, 1.0)
+        M = self.target_activation_maps.pop(0)
+        M = torch.where(M <= 0, 0.0, 1.0)
+        result = output_A * M
+        return result
+
+    def forward(self, src_x, targ_x):
         # List to store hooks
-        hooks = []
 
         # Add hook to obtain target_activation_maps
         for name, layer in self.resnet.named_children():
             if isinstance(layer, nn.Conv2d):
-                hooks.append(layer.register_forward_hook(self.activation_shaping_hook))
-                layer(targ_x)
+                layer.register_forward_hook(self.activation_shaping_hook)
+                """hooks.append(layer.register_forward_hook(self.activation_shaping_hook))
+                layer(targ_x)"""
 
-        # Remove hooks
-        for h in hooks:
-            h.remove()
 
         print("target_activation_maps")
-
         # Apply the activation shaping function to the source data
         for name, layer in self.resnet.named_children():
             if isinstance(layer, nn.Conv2d):
-                hooks.append(layer.register_forward_hook(self.activation_shaping_hook2))
-                layer(src_x)
+                layer.register_forward_hook(self.activation_shaping_hook2)
+                """hooks2.append(layer.register_forward_hook(self.activation_shaping_hook2))
+                layer(src_x)"""
 
         print("product")
-        # Remove hooks
-        for h in hooks:
-            h.remove()
+
+        
+        #src_x = src_x.view(src_x.shape[0] , -1)
+        #src_x = self.resnet.fc(src_x)
+        
         # Return the final result
         return self.resnet(src_x)
 
