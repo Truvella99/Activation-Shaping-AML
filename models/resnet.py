@@ -44,7 +44,7 @@ class ASHResNet18(nn.Module):
     def hook1(self, module, input, output):
         print('\nForward hook running...')
         self.activations.append(output.clone().detach())
-        print(f'Activations size: {output.size()}')
+        #print(f'Activations size: {output.size()}')
 
     def hook2(self, module, input, output):
         print('Backward hook running...')
@@ -59,23 +59,28 @@ class ASHResNet18(nn.Module):
         print('\nForward...')
 
         hooks = []
+        hooks2 = []
 
-
-        if targ_x is not None:
-            for layer in self.resnet.children():
-              if isinstance(layer, nn.Conv2d):
-                hooks.append(layer.register_forward_hook(self.hook1))
-
-            for layer in self.resnet.children():
+        if targ_x is not None:  # Sono in train
+            for layer in self.resnet.modules():
                 if isinstance(layer, nn.Conv2d):
-                  hooks.append(layer.register_forward_hook(self.hook2))
+                    hooks.append(layer.register_forward_hook(self.hook1))
+            self.resnet(targ_x)
+            for h in hooks:
+                h.remove()
 
-        result = self.resnet(src_x)
+            for layer in self.resnet.modules():
+                if isinstance(layer, nn.Conv2d):
+                    hooks2.append(layer.register_forward_hook(self.hook2))
 
-        for h in hooks:
-            h.remove()
+            src_logits = self.resnet(src_x)
 
-        return result.to(CONFIG.device)
+            for h in hooks2:
+                h.remove()
+
+            return src_logits
+        else:
+            return self.resnet(src_x)    
 
         """
         # Aggiungi hook per ottenere target_activation_maps
