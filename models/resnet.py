@@ -25,7 +25,7 @@ class BaseResNet18(nn.Module):
 class ASHResNet18(nn.Module):
     def __init__(self):
         super(ASHResNet18, self).__init__()
-        self.resnet = resnet18(pretrained=False)
+        self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         self.activations = []
 
