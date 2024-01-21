@@ -12,7 +12,7 @@ import numpy as np
 from parse_args import parse_arguments
 
 from dataset import PACS
-from models.resnet import BaseResNet18,ASHResNet18
+from models.resnet import BaseResNet18,ASHResNet18,RAMResNet18
 
 from globals import CONFIG
 
@@ -73,7 +73,13 @@ def train(model, data):
 
                     # Calculate cross-entropy loss
                     loss = F.cross_entropy(output, src_y)
+                elif CONFIG.experiment in ['random_activation_maps']:
+                    src_x, src_y, target_x = batch
+                    src_x, src_y, target_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), target_x.to(CONFIG.device)
+                    output = model(src_x, target_x)
 
+                    # Calculate cross-entropy loss
+                    loss = F.cross_entropy(output, src_y)
 
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
@@ -114,6 +120,8 @@ def main():
         model = BaseResNet18()
     elif CONFIG.experiment in ['activation_shaping_module']:
         model = ASHResNet18()
+    elif CONFIG.experiment in ['random_activation_maps']:
+        model = RAMResNet18()
     ######################################################
     #elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
 
