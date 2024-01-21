@@ -30,7 +30,7 @@ class ASHResNet18(nn.Module):
         self.activations = []
 
     def hook1(self, module, input, output):
-        # print('\nForward hook running...')
+        # print('Forward hook running...')
         self.activations.append(output.clone().detach())
 
     def hook2(self, module, input, output):
@@ -42,23 +42,58 @@ class ASHResNet18(nn.Module):
         result = output_A * M
         return result
 
+    def attach_hook(self,mode,counter,step=None):
+      # TRY MULTIPLE CONFIGURATIONS
+      CONV_LAYERS = 20
+      FIRST_LAYER = 0
+      LAST_LAYER = CONV_LAYERS
+      MIDDLE_LAYER = CONV_LAYERS/2
+      
+      if mode == 'counter_step':
+          return counter % step == 0
+      elif mode == 'first':
+          return counter == FIRST_LAYER
+      elif mode == 'middle':
+          return counter == MIDDLE_LAYER
+      elif mode == 'last':
+          return counter == LAST_LAYER
+      elif mode == 'first_middle':
+          return counter == FIRST_LAYER or counter == MIDDLE_LAYER
+      elif mode == 'middle_last':
+          return counter == MIDDLE_LAYER or counter == LAST_LAYER
+      elif mode == 'first_last':
+          return counter == FIRST_LAYER or counter == LAST_LAYER
+      else:
+          return False
+    
     def forward(self, src_x, targ_x=None):
         print('\nForward...')
 
         hooks = []
         hooks2 = []
+        counter = 0
+        step = 1 # 1 = ALL CONV2D LAYERS
 
         if targ_x is not None:  # Sono in train
             for layer in self.resnet.modules():
                 if isinstance(layer, nn.Conv2d):
-                    hooks.append(layer.register_forward_hook(self.hook1))
+                    if self.attach_hook(mode='counter_step',counter=counter,step=step):
+                      hooks.append(layer.register_forward_hook(self.hook1))
+                    counter+=1
+                
             self.resnet(targ_x)
+            
             for h in hooks:
                 h.remove()
-
+            
+            # RESET COUNTER FOR SECOND HOOK
+            counter = 0
+            
             for layer in self.resnet.modules():
                 if isinstance(layer, nn.Conv2d):
-                    hooks2.append(layer.register_forward_hook(self.hook2))
+                    if self.attach_hook(mode='counter_step',counter=counter,step=step):
+                      hooks2.append(layer.register_forward_hook(self.hook2))
+                    counter+=1
 
             src_logits = self.resnet(src_x)
 
