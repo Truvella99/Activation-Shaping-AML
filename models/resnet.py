@@ -44,10 +44,10 @@ class ASHResNet18(nn.Module):
 
     def attach_hook(self,mode,counter,step=None):
       # TRY MULTIPLE CONFIGURATIONS
-      CONV_LAYERS = 20
+      CONV_LAYERS = 19
       FIRST_LAYER = 0
       LAST_LAYER = CONV_LAYERS
-      MIDDLE_LAYER = CONV_LAYERS/2
+      MIDDLE_LAYER = int(CONV_LAYERS/2)
       
       if mode == 'counter_step':
           return counter % step == 0
