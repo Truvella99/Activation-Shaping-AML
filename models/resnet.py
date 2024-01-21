@@ -76,6 +76,7 @@ class ASHResNet18(nn.Module):
 
         if targ_x is not None:  # Sono in train
             for layer in self.resnet.modules():
+                # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
                 if isinstance(layer, nn.Conv2d):
                     if self.attach_hook(mode='counter_step',counter=counter,step=step):
                       hooks.append(layer.register_forward_hook(self.hook1))
@@ -90,6 +91,7 @@ class ASHResNet18(nn.Module):
             counter = 0
             
             for layer in self.resnet.modules():
+                # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha
                 if isinstance(layer, nn.Conv2d):
                     if self.attach_hook(mode='counter_step',counter=counter,step=step):
                       hooks2.append(layer.register_forward_hook(self.hook2))
