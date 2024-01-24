@@ -146,15 +146,43 @@ class RAMResNet18(nn.Module):
         result = output_A * zeros_and_ones_tensor
         return result
 
+    def attach_hook(self,mode,counter,step=None):
+        # TRY MULTIPLE CONFIGURATIONS
+        CONV_LAYERS = 19
+        FIRST_LAYER = 0
+        LAST_LAYER = CONV_LAYERS
+        MIDDLE_LAYER = int(CONV_LAYERS/2)
+
+        if mode == 'counter_step':
+            return counter % step == 0
+        elif mode == 'first':
+            return counter == FIRST_LAYER
+        elif mode == 'middle':
+            return counter == MIDDLE_LAYER
+        elif mode == 'last':
+            return counter == LAST_LAYER
+        elif mode == 'first_middle':
+            return counter == FIRST_LAYER or counter == MIDDLE_LAYER
+        elif mode == 'middle_last':
+            return counter == MIDDLE_LAYER or counter == LAST_LAYER
+        elif mode == 'first_last':
+            return counter == FIRST_LAYER or counter == LAST_LAYER
+        else:
+            return False
+    
     def forward(self, x, Train=None):
         print('\nForward...')
 
         hooks = []
+        counter = 0
+        step = 1 # 1 = ALL CONV2D LAYERS
 
         if Train:  # Sono in train
             for layer in self.resnet.modules():
                 if isinstance(layer, nn.Conv2d):
+                  if self.attach_hook(mode='counter_step',counter=counter,step=step):
                     hooks.append(layer.register_forward_hook(self.random_m_hook))
+                  counter+=1
 
             src_logits = self.resnet(x)
 
