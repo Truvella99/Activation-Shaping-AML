@@ -22,6 +22,13 @@ class BaseResNet18(nn.Module):
 #
 ######################################################
 # TODO: modify 'BaseResNet18' including the Activation Shaping Module
+
+
+###############################################
+#                  POINT 2
+###############################################
+
+
 class ASHResNet18(nn.Module):
     def __init__(self):
         super(ASHResNet18, self).__init__()
@@ -106,69 +113,57 @@ class ASHResNet18(nn.Module):
         else:
             return self.resnet(src_x)    
 
-        """
-        # Aggiungi hook per ottenere target_activation_maps
-        for layer in self.modules():
-            if isinstance(layer, nn.Conv2d):
-                layer.register_forward_hook(self.activation_shaping_hook)
-                self.resnet(targ_x)
-          
-        hooks2.append(layer.register_forward_hook(self.activation_shaping_hook2))layer(src_x)"""
+
+###############################################
+#                  POINT 2
+###############################################
+
 
 class RAMResNet18(nn.Module):
     def __init__(self):
-        super(ASHResNet18, self).__init__()
+        super(RAMResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
-        self.activations = []
 
-    def hook1(self, module, input, output):
-        # print('\nForward hook running...')
-        self.activations.append(output.clone().detach())
-
-    def hook2(self, module, input, output):
+    def random_m_hook(self, module, input, output):
         # Apply the activation shaping function to the source data
-        # print('Backward hook running...')
         output_A = torch.where(output <= 0, 0.0, 1.0)
-        M = self.activations.pop(0)
-        M = torch.where(M <= 0, 0.0, 1.0)
-        result = output_A * M
+        # Specify the desired ratio of 1s (e.g., 0.3 for 30% of 1s)
+        # YOU SHOULD TRY DIFFERENT RATIOS ==> CHANGE desired_ratio_of_ones FOR EXPERIMENTING
+        desired_ratio_of_ones = 1.0  # STARTING FROM M MADE OF ONLY ONES
+        # Calculate the number of elements to be set to 1 based on the desired ratio
+        num_ones = int(desired_ratio_of_ones * output_A.numel())
+        # Create a tensor with the same shape filled with 0s
+        zeros_and_ones_tensor = torch.zeros_like(output_A, dtype=torch.float32)
+        # Flatten the tensor to 1D for indexing
+        flat_zeros_and_ones_tensor = zeros_and_ones_tensor.view(-1)
+        # Set a random subset of elements to 1 based on the desired ratio
+        indices_to_set_to_one = torch.randperm(flat_zeros_and_ones_tensor.numel())[:num_ones]
+        flat_zeros_and_ones_tensor[indices_to_set_to_one] = 1.0
+        # Reshape the tensor back to its original shape
+        # zeros_and_ones_tensor WILL BE OUR M NOW IN POINT 2
+        zeros_and_ones_tensor = flat_zeros_and_ones_tensor.view(output_A.shape)
+        result = output_A * zeros_and_ones_tensor
         return result
 
-    def forward(self, src_x, targ_x=None):
+    def forward(self, x, Train=None):
         print('\nForward...')
 
         hooks = []
-        hooks2 = []
 
-        if targ_x is not None:  # Sono in train
+        if Train:  # Sono in train
             for layer in self.resnet.modules():
                 if isinstance(layer, nn.Conv2d):
-                    hooks.append(layer.register_forward_hook(self.hook1))
-            self.resnet(targ_x)
+                    hooks.append(layer.register_forward_hook(self.random_m_hook))
+
+            src_logits = self.resnet(x)
+
             for h in hooks:
                 h.remove()
 
-            for layer in self.resnet.modules():
-                if isinstance(layer, nn.Conv2d):
-                    hooks2.append(layer.register_forward_hook(self.hook2))
-
-            src_logits = self.resnet(src_x)
-
-            for h in hooks2:
-                h.remove()
-
             return src_logits
-        else:
-            return self.resnet(src_x)    
+        else: # Sono in Test, x che mi viene passato qui è quello del test quindi target domain
+            return self.resnet(x) # THEN YOU SHOULD TEST THE MODEL ON THE TARGET DOMAINS    
 
-        """
-        # Aggiungi hook per ottenere target_activation_maps
-        for layer in self.modules():
-            if isinstance(layer, nn.Conv2d):
-                layer.register_forward_hook(self.activation_shaping_hook)
-                self.resnet(targ_x)
-          
-        hooks2.append(layer.register_forward_hook(self.activation_shaping_hook2))layer(src_x)"""
 # Now, you can train your model using your source domain data and apply it to the target domain
 # Ensure to experiment with different configurations of inserting the activation shaping layer

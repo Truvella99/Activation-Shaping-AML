@@ -24,7 +24,7 @@ def evaluate(model, data):
     acc_meter = acc_meter.to(CONFIG.device)
 
     loss = [0.0, 0]
-    for x, y,_ in tqdm(data):
+    for x, y,*_ in tqdm(data):
         with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
             x, y = x.to(CONFIG.device), y.to(CONFIG.device)
             logits = model(x)
@@ -74,9 +74,9 @@ def train(model, data):
                     # Calculate cross-entropy loss
                     loss = F.cross_entropy(output, src_y)
                 elif CONFIG.experiment in ['random_activation_maps']:
-                    src_x, src_y, target_x = batch
-                    src_x, src_y, target_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), target_x.to(CONFIG.device)
-                    output = model(src_x, target_x)
+                    src_x, src_y = batch
+                    src_x, src_y = src_x.to(CONFIG.device), src_y.to(CONFIG.device)
+                    output = model(src_x,Train=True)
 
                     # Calculate cross-entropy loss
                     loss = F.cross_entropy(output, src_y)
