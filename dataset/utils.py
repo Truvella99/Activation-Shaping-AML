@@ -46,7 +46,7 @@ class DomainAdaptationDataset(Dataset):
         # FOR THE SMALLEST DOMAIN WE USE THE % OPERATOR TO AVOID INDEX OUT OF RANGE 
         if len_src > len_targ:
           index_targ = index_targ % len_targ
-        else:
+        elif len_src < len_targ:
           index_src = index_src % len_src
         src_x, src_y = self.source_examples[index_src][0] , self.source_examples[index_src][1] 
         targ_x = self.target_examples[index_targ][0]
