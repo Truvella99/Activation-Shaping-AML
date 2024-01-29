@@ -17,7 +17,7 @@ class BaseResNet18(nn.Module):
 ###############################################
 RATIO = 1.0
 K = 5
-
+STEP = 1 # 1 = All Conv2D Layers
 ###############################################
 #                  POINT 1/3
 ###############################################
@@ -73,7 +73,7 @@ class ASHResNet18(nn.Module):
         hooks = []
         hooks2 = []
         counter = 0
-        step = 1 # 1 = ALL CONV2D LAYERS
+        step = STEP
 
         if targ_x is not None:  # Sono in train
             for layer in self.resnet.modules():
@@ -168,7 +168,7 @@ class RAMResNet18(nn.Module):
 
         hooks = []
         counter = 0
-        step = 1 # 1 = ALL CONV2D LAYERS
+        step = STEP
 
         if Train:  # Sono in train
             for layer in self.resnet.modules():
@@ -253,7 +253,7 @@ class EXTASHResNet18(nn.Module):
         hooks = []
         hooks2 = []
         counter = 0
-        step = 1 # 1 = ALL CONV2D LAYERS
+        step = STEP
 
         if targ_x is not None:  # Sono in train
             for layer in self.resnet.modules():
@@ -357,7 +357,7 @@ class EXTRAMResNet18(nn.Module):
 
         hooks = []
         counter = 0
-        step = 1 # 1 = ALL CONV2D LAYERS
+        step = STEP
 
         if Train:  # Sono in train
             for layer in self.resnet.modules():
