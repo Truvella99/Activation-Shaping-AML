@@ -52,7 +52,7 @@ def load_data():
         test_dataset = BaseDataset(target_examples, transform=test_transform)
 
     ######################################################
-    elif CONFIG.experiment in ['activation_shaping_module']:
+    elif CONFIG.experiment in ['activation_shaping_module','extension_2_activation_shaping_module']:
       source_examples, target_examples = [], []
 
       # Load source
@@ -75,7 +75,7 @@ def load_data():
       test_dataset = DomainAdaptationDataset(source_examples, target_examples, transform=train_transform)
     
     ######################################################
-    elif CONFIG.experiment in ['random_activation_maps']:
+    elif CONFIG.experiment in ['random_activation_maps','extension_2_random_activation_maps']:
       source_examples, target_examples = [], []
 
       # Load source
