@@ -18,6 +18,32 @@ class BaseResNet18(nn.Module):
 RATIO = 1.0
 K = 5
 STEP = 1 # 1 = All Conv2D Layers
+
+# FUNCTION TO DECIDE WHERE ATTACH THE HOOK
+def attach_hook(mode,counter,step=None):
+      # TRY MULTIPLE CONFIGURATIONS
+      CONV_LAYERS = 19
+      FIRST_LAYER = 0
+      LAST_LAYER = CONV_LAYERS
+      MIDDLE_LAYER = int(CONV_LAYERS/2)
+      
+      if mode == 'counter_step':
+          return counter % step == 0
+      elif mode == 'first':
+          return counter == FIRST_LAYER
+      elif mode == 'middle':
+          return counter == MIDDLE_LAYER
+      elif mode == 'last':
+          return counter == LAST_LAYER
+      elif mode == 'first_middle':
+          return counter == FIRST_LAYER or counter == MIDDLE_LAYER
+      elif mode == 'middle_last':
+          return counter == MIDDLE_LAYER or counter == LAST_LAYER
+      elif mode == 'first_last':
+          return counter == FIRST_LAYER or counter == LAST_LAYER
+      else:
+          return False
+
 ###############################################
 #                  POINT 1/3
 ###############################################
@@ -42,30 +68,6 @@ class ASHResNet18(nn.Module):
         M = torch.where(M <= 0, 0.0, 1.0)
         result = output_A * M
         return result
-
-    def attach_hook(self,mode,counter,step=None):
-      # TRY MULTIPLE CONFIGURATIONS
-      CONV_LAYERS = 19
-      FIRST_LAYER = 0
-      LAST_LAYER = CONV_LAYERS
-      MIDDLE_LAYER = int(CONV_LAYERS/2)
-      
-      if mode == 'counter_step':
-          return counter % step == 0
-      elif mode == 'first':
-          return counter == FIRST_LAYER
-      elif mode == 'middle':
-          return counter == MIDDLE_LAYER
-      elif mode == 'last':
-          return counter == LAST_LAYER
-      elif mode == 'first_middle':
-          return counter == FIRST_LAYER or counter == MIDDLE_LAYER
-      elif mode == 'middle_last':
-          return counter == MIDDLE_LAYER or counter == LAST_LAYER
-      elif mode == 'first_last':
-          return counter == FIRST_LAYER or counter == LAST_LAYER
-      else:
-          return False
     
     def forward(self, src_x, targ_x=None):
         print('\nForward...')
@@ -79,7 +81,7 @@ class ASHResNet18(nn.Module):
             for layer in self.resnet.modules():
                 # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
                 if isinstance(layer, nn.Conv2d):
-                    if self.attach_hook(mode='counter_step',counter=counter,step=step):
+                    if attach_hook(mode='counter_step',counter=counter,step=step):
                       hooks.append(layer.register_forward_hook(self.hook1))
                     counter+=1
                 
@@ -94,7 +96,7 @@ class ASHResNet18(nn.Module):
             for layer in self.resnet.modules():
                 # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha
                 if isinstance(layer, nn.Conv2d):
-                    if self.attach_hook(mode='counter_step',counter=counter,step=step):
+                    if attach_hook(mode='counter_step',counter=counter,step=step):
                       hooks2.append(layer.register_forward_hook(self.hook2))
                     counter+=1
 
@@ -138,30 +140,6 @@ class RAMResNet18(nn.Module):
         M = flat_zeros_and_ones_tensor.view(output_A.shape)
         result = output_A * M
         return result
-
-    def attach_hook(self,mode,counter,step=None):
-        # TRY MULTIPLE CONFIGURATIONS
-        CONV_LAYERS = 19
-        FIRST_LAYER = 0
-        LAST_LAYER = CONV_LAYERS
-        MIDDLE_LAYER = int(CONV_LAYERS/2)
-
-        if mode == 'counter_step':
-            return counter % step == 0
-        elif mode == 'first':
-            return counter == FIRST_LAYER
-        elif mode == 'middle':
-            return counter == MIDDLE_LAYER
-        elif mode == 'last':
-            return counter == LAST_LAYER
-        elif mode == 'first_middle':
-            return counter == FIRST_LAYER or counter == MIDDLE_LAYER
-        elif mode == 'middle_last':
-            return counter == MIDDLE_LAYER or counter == LAST_LAYER
-        elif mode == 'first_last':
-            return counter == FIRST_LAYER or counter == LAST_LAYER
-        else:
-            return False
     
     def forward(self, x, Train=None):
         print('\nForward...')
@@ -173,7 +151,7 @@ class RAMResNet18(nn.Module):
         if Train:  # Sono in train
             for layer in self.resnet.modules():
                 if isinstance(layer, nn.Conv2d):
-                  if self.attach_hook(mode='counter_step',counter=counter,step=step):
+                  if attach_hook(mode='counter_step',counter=counter,step=step):
                     hooks.append(layer.register_forward_hook(self.random_m_hook))
                   counter+=1
 
@@ -222,30 +200,6 @@ class EXTASHResNet18(nn.Module):
         # VARIANT 1, KEEP M AS IT IS AND SIMPLY MULTIPLY BY A             
         result = output_A * M
         return result
-
-    def attach_hook(self,mode,counter,step=None):
-      # TRY MULTIPLE CONFIGURATIONS
-      CONV_LAYERS = 19
-      FIRST_LAYER = 0
-      LAST_LAYER = CONV_LAYERS
-      MIDDLE_LAYER = int(CONV_LAYERS/2)
-      
-      if mode == 'counter_step':
-          return counter % step == 0
-      elif mode == 'first':
-          return counter == FIRST_LAYER
-      elif mode == 'middle':
-          return counter == MIDDLE_LAYER
-      elif mode == 'last':
-          return counter == LAST_LAYER
-      elif mode == 'first_middle':
-          return counter == FIRST_LAYER or counter == MIDDLE_LAYER
-      elif mode == 'middle_last':
-          return counter == MIDDLE_LAYER or counter == LAST_LAYER
-      elif mode == 'first_last':
-          return counter == FIRST_LAYER or counter == LAST_LAYER
-      else:
-          return False
     
     def forward(self, src_x, targ_x=None):
         print('\nForward...')
@@ -259,7 +213,7 @@ class EXTASHResNet18(nn.Module):
             for layer in self.resnet.modules():
                 # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
                 if isinstance(layer, nn.Conv2d):
-                    if self.attach_hook(mode='counter_step',counter=counter,step=step):
+                    if attach_hook(mode='counter_step',counter=counter,step=step):
                       hooks.append(layer.register_forward_hook(self.hook1))
                     counter+=1
                 
@@ -274,7 +228,7 @@ class EXTASHResNet18(nn.Module):
             for layer in self.resnet.modules():
                 # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha
                 if isinstance(layer, nn.Conv2d):
-                    if self.attach_hook(mode='counter_step',counter=counter,step=step):
+                    if attach_hook(mode='counter_step',counter=counter,step=step):
                       hooks2.append(layer.register_forward_hook(self.hook2))
                     counter+=1
 
@@ -327,30 +281,6 @@ class EXTRAMResNet18(nn.Module):
         # VARIANT 1 KEEP M AS IT IS AND SIMPLY MULTIPLY IT WITH A 
         result = output_A * M
         return result
-
-    def attach_hook(self,mode,counter,step=None):
-        # TRY MULTIPLE CONFIGURATIONS
-        CONV_LAYERS = 19
-        FIRST_LAYER = 0
-        LAST_LAYER = CONV_LAYERS
-        MIDDLE_LAYER = int(CONV_LAYERS/2)
-
-        if mode == 'counter_step':
-            return counter % step == 0
-        elif mode == 'first':
-            return counter == FIRST_LAYER
-        elif mode == 'middle':
-            return counter == MIDDLE_LAYER
-        elif mode == 'last':
-            return counter == LAST_LAYER
-        elif mode == 'first_middle':
-            return counter == FIRST_LAYER or counter == MIDDLE_LAYER
-        elif mode == 'middle_last':
-            return counter == MIDDLE_LAYER or counter == LAST_LAYER
-        elif mode == 'first_last':
-            return counter == FIRST_LAYER or counter == LAST_LAYER
-        else:
-            return False
     
     def forward(self, x, Train=None):
         print('\nForward...')
@@ -362,7 +292,7 @@ class EXTRAMResNet18(nn.Module):
         if Train:  # Sono in train
             for layer in self.resnet.modules():
                 if isinstance(layer, nn.Conv2d):
-                  if self.attach_hook(mode='counter_step',counter=counter,step=step):
+                  if attach_hook(mode='counter_step',counter=counter,step=step):
                     hooks.append(layer.register_forward_hook(self.random_m_hook))
                   counter+=1
 
