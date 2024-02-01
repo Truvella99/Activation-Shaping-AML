@@ -34,22 +34,13 @@ class DomainAdaptationDataset(Dataset):
         self.T = transform
     
     def __len__(self):
-        # TO HANDLE ALSO THE CASE IN WHICH THE TARGET IS BIGGER THAN THE SOURCE
-        return max(len(self.source_examples), len(self.target_examples))
+        return len(self.source_examples)
     
     def __getitem__(self, index):
-        index_src = index
-        len_src = len(self.source_examples) 
-        index_targ = index
-        len_targ = len(self.target_examples)
         # TO HANDLE ALSO THE CASE IN WHICH THE TARGET IS BIGGER THAN THE SOURCE
-        # FOR THE SMALLEST DOMAIN WE USE THE % OPERATOR TO AVOID INDEX OUT OF RANGE 
-        if len_src > len_targ:
-          index_targ = index_targ % len_targ
-        elif len_src < len_targ:
-          index_src = index_src % len_src
-        src_x, src_y = self.source_examples[index_src][0] , self.source_examples[index_src][1] 
-        targ_x = self.target_examples[index_targ][0]
+        src_x, src_y = self.source_examples[index][0] , self.source_examples[index][1] 
+        # Randomly sample a target example
+        targ_x,_  = random.choice(self.target_examples)
         src_x = Image.open(src_x).convert('RGB')
         src_x = self.T(src_x).to(CONFIG.dtype)
         src_y = torch.tensor(src_y).long()

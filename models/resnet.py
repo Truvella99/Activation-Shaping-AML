@@ -15,14 +15,14 @@ class BaseResNet18(nn.Module):
 ###############################################
 #                  PARAMETERS
 ###############################################
-RATIO = 1.0
+RATIO = 0.6
 K = 5
 STEP = 1 # 1 = All Conv2D Layers
 
 # FUNCTION TO DECIDE WHERE ATTACH THE HOOK
 def attach_hook(mode,counter,step=None):
       # TRY MULTIPLE CONFIGURATIONS
-      CONV_LAYERS = 19
+      CONV_LAYERS = 15
       FIRST_LAYER = 0
       LAST_LAYER = CONV_LAYERS
       MIDDLE_LAYER = int(CONV_LAYERS/2)
@@ -78,10 +78,12 @@ class ASHResNet18(nn.Module):
         step = STEP
 
         if targ_x is not None:  # Sono in train
-            for layer in self.resnet.modules():
+            for name,layer in self.resnet.named_modules():
                 # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
-                if isinstance(layer, nn.Conv2d):
-                    if attach_hook(mode='counter_step',counter=counter,step=step):
+                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                    #print(f"name: {name}, layer: {layer}")
+                    if attach_hook(mode='last',counter=counter):
+                    #if name == 'layer4.1.conv2':
                       hooks.append(layer.register_forward_hook(self.hook1))
                     counter+=1
                 
@@ -93,10 +95,10 @@ class ASHResNet18(nn.Module):
             # RESET COUNTER FOR SECOND HOOK
             counter = 0
             
-            for layer in self.resnet.modules():
+            for name,layer in self.resnet.named_modules():
                 # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha
-                if isinstance(layer, nn.Conv2d):
-                    if attach_hook(mode='counter_step',counter=counter,step=step):
+                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                    if attach_hook(mode='last',counter=counter):
                       hooks2.append(layer.register_forward_hook(self.hook2))
                     counter+=1
 
@@ -149,9 +151,9 @@ class RAMResNet18(nn.Module):
         step = STEP
 
         if Train:  # Sono in train
-            for layer in self.resnet.modules():
-                if isinstance(layer, nn.Conv2d):
-                  if attach_hook(mode='counter_step',counter=counter,step=step):
+            for name,layer in self.resnet.named_modules():
+                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                  if attach_hook(mode='last',counter=counter):
                     hooks.append(layer.register_forward_hook(self.random_m_hook))
                   counter+=1
 
@@ -210,10 +212,10 @@ class EXTASHResNet18(nn.Module):
         step = STEP
 
         if targ_x is not None:  # Sono in train
-            for layer in self.resnet.modules():
+            for name,layer in self.resnet.named_modules():
                 # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
-                if isinstance(layer, nn.Conv2d):
-                    if attach_hook(mode='counter_step',counter=counter,step=step):
+                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                    if attach_hook(mode='last',counter=counter):
                       hooks.append(layer.register_forward_hook(self.hook1))
                     counter+=1
                 
@@ -225,10 +227,10 @@ class EXTASHResNet18(nn.Module):
             # RESET COUNTER FOR SECOND HOOK
             counter = 0
             
-            for layer in self.resnet.modules():
+            for name,layer in self.resnet.named_modules():
                 # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha
-                if isinstance(layer, nn.Conv2d):
-                    if attach_hook(mode='counter_step',counter=counter,step=step):
+                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                    if attach_hook(mode='last',counter=counter):
                       hooks2.append(layer.register_forward_hook(self.hook2))
                     counter+=1
 
@@ -290,9 +292,9 @@ class EXTRAMResNet18(nn.Module):
         step = STEP
 
         if Train:  # Sono in train
-            for layer in self.resnet.modules():
-                if isinstance(layer, nn.Conv2d):
-                  if attach_hook(mode='counter_step',counter=counter,step=step):
+            for name,layer in self.resnet.named_modules():
+                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                  if attach_hook(mode='last',counter=counter):
                     hooks.append(layer.register_forward_hook(self.random_m_hook))
                   counter+=1
 
