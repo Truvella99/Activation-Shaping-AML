@@ -18,28 +18,29 @@ class BaseResNet18(nn.Module):
 RATIO = 0.6
 K = 5
 STEP = 1 # 1 = All Conv2D Layers
+MODE = 'last' # Modality that defines where attach the hook
 
 # FUNCTION TO DECIDE WHERE ATTACH THE HOOK
-def attach_hook(mode,counter,step=None):
+def attach_hook(counter):
       # TRY MULTIPLE CONFIGURATIONS
       CONV_LAYERS = 15
       FIRST_LAYER = 0
       LAST_LAYER = CONV_LAYERS
       MIDDLE_LAYER = int(CONV_LAYERS/2)
       
-      if mode == 'counter_step':
-          return counter % step == 0
-      elif mode == 'first':
+      if MODE == 'counter_step':
+          return counter % STEP == 0
+      elif MODE == 'first':
           return counter == FIRST_LAYER
-      elif mode == 'middle':
+      elif MODE == 'middle':
           return counter == MIDDLE_LAYER
-      elif mode == 'last':
+      elif MODE == 'last':
           return counter == LAST_LAYER
-      elif mode == 'first_middle':
+      elif MODE == 'first_middle':
           return counter == FIRST_LAYER or counter == MIDDLE_LAYER
-      elif mode == 'middle_last':
+      elif MODE == 'middle_last':
           return counter == MIDDLE_LAYER or counter == LAST_LAYER
-      elif mode == 'first_last':
+      elif MODE == 'first_last':
           return counter == FIRST_LAYER or counter == LAST_LAYER
       else:
           return False
@@ -54,62 +55,48 @@ class ASHResNet18(nn.Module):
         super(ASHResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
+        self.hooks = []
         self.activations = []
 
-    def hook1(self, module, input, output):
-        # print('Forward hook running...')
+    def attach_get_activation_maps_hooks(self):
+        counter = 0
+        for name,layer in self.resnet.named_modules():
+            # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
+            if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                #print(f"name: {name}, layer: {layer}")
+                if attach_hook(counter):
+                #if name == 'layer4.1.conv2':
+                    self.hooks.append(layer.register_forward_hook(self.get_activation_maps_hook))
+                    counter+=1
+    
+    def remove_hooks(self):
+        for hook in self.hooks:
+            hook.remove()
+
+    def attach_apply_activation_maps_hooks(self):
+        counter = 0
+        for name,layer in self.resnet.named_modules():
+            # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
+            if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                #print(f"name: {name}, layer: {layer}")
+                if attach_hook(counter):
+                #if name == 'layer4.1.conv2':
+                    self.hooks.append(layer.register_forward_hook(self.apply_activation_maps_hook))
+                    counter+=1
+
+    def get_activation_maps_hook(self, module, input, output):
         self.activations.append(output.clone().detach())
 
-    def hook2(self, module, input, output):
+    def apply_activation_maps_hook(self, module, input, output):
         # Apply the activation shaping function to the source data
-        # print('Backward hook running...')
         output_A = torch.where(output <= 0, 0.0, 1.0)
         M = self.activations.pop(0)
         M = torch.where(M <= 0, 0.0, 1.0)
         result = output_A * M
         return result
     
-    def forward(self, src_x, targ_x=None):
-        print('\nForward...')
-
-        hooks = []
-        hooks2 = []
-        counter = 0
-        step = STEP
-
-        if targ_x is not None:  # Sono in train
-            for name,layer in self.resnet.named_modules():
-                # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
-                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
-                    #print(f"name: {name}, layer: {layer}")
-                    if attach_hook(mode='last',counter=counter):
-                    #if name == 'layer4.1.conv2':
-                      hooks.append(layer.register_forward_hook(self.hook1))
-                    counter+=1
-                
-            self.resnet(targ_x)
-            
-            for h in hooks:
-                h.remove()
-            
-            # RESET COUNTER FOR SECOND HOOK
-            counter = 0
-            
-            for name,layer in self.resnet.named_modules():
-                # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha
-                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
-                    if attach_hook(mode='last',counter=counter):
-                      hooks2.append(layer.register_forward_hook(self.hook2))
-                    counter+=1
-
-            src_logits = self.resnet(src_x)
-
-            for h in hooks2:
-                h.remove()
-
-            return src_logits
-        else:
-            return self.resnet(src_x)    
+    def forward(self, x):
+        return self.resnet(x)    
 
 
 ###############################################
@@ -122,8 +109,24 @@ class RAMResNet18(nn.Module):
         super(RAMResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
+        self.hooks = []
 
-    def random_m_hook(self, module, input, output):
+    def attach_random_activation_maps_hooks(self):
+        counter = 0
+        for name,layer in self.resnet.named_modules():
+            # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
+            if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                #print(f"name: {name}, layer: {layer}")
+                if attach_hook(counter):
+                #if name == 'layer4.1.conv2':
+                    self.hooks.append(layer.register_forward_hook(self.random_activation_maps_hook))
+                    counter+=1
+    
+    def remove_hooks(self):
+        for hook in self.hooks:
+            hook.remove()
+    
+    def random_activation_maps_hook(self, module, input, output):
         # Apply the activation shaping function to the source data
         output_A = torch.where(output <= 0, 0.0, 1.0)
         # Specify the desired ratio of 1s (e.g., 0.3 for 30% of 1s)
@@ -143,28 +146,8 @@ class RAMResNet18(nn.Module):
         result = output_A * M
         return result
     
-    def forward(self, x, Train=None):
-        print('\nForward...')
-
-        hooks = []
-        counter = 0
-        step = STEP
-
-        if Train:  # Sono in train
-            for name,layer in self.resnet.named_modules():
-                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
-                  if attach_hook(mode='last',counter=counter):
-                    hooks.append(layer.register_forward_hook(self.random_m_hook))
-                  counter+=1
-
-            src_logits = self.resnet(x)
-
-            for h in hooks:
-                h.remove()
-
-            return src_logits
-        else: # Sono in Test, x che mi viene passato qui è quello del test quindi target domain
-            return self.resnet(x) # THEN YOU SHOULD TEST THE MODEL ON THE TARGET DOMAINS    
+    def forward(self, x):
+        return self.resnet(x)     
 
 ###############################################
 #                  EXTENSION 2
@@ -175,16 +158,41 @@ class EXTASHResNet18(nn.Module):
         super(EXTASHResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
+        self.hooks = []
         self.activations = []
         self.variation = variation
 
-    def hook1(self, module, input, output):
-        # print('Forward hook running...')
+    def attach_get_activation_maps_hooks(self):
+        counter = 0
+        for name,layer in self.resnet.named_modules():
+            # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
+            if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                #print(f"name: {name}, layer: {layer}")
+                if attach_hook(counter):
+                #if name == 'layer4.1.conv2':
+                    self.hooks.append(layer.register_forward_hook(self.get_activation_maps_hook))
+                    counter+=1
+    
+    def remove_hooks(self):
+        for hook in self.hooks:
+            hook.remove()
+
+    def attach_apply_activation_maps_hooks(self):
+        counter = 0
+        for name,layer in self.resnet.named_modules():
+            # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
+            if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                #print(f"name: {name}, layer: {layer}")
+                if attach_hook(counter):
+                #if name == 'layer4.1.conv2':
+                    self.hooks.append(layer.register_forward_hook(self.apply_activation_maps_hook))
+                    counter+=1
+
+    def get_activation_maps_hook(self, module, input, output):
         self.activations.append(output.clone().detach())
 
-    def hook2(self, module, input, output):
+    def apply_activation_maps_hook(self, module, input, output):
         # Apply the activation shaping function to the source data
-        # print('Backward hook running...')
         output_A = output
         M = self.activations.pop(0)
         # BINARIZE AND TOP K ONLY ON VARIANT 2
@@ -203,45 +211,8 @@ class EXTASHResNet18(nn.Module):
         result = output_A * M
         return result
     
-    def forward(self, src_x, targ_x=None):
-        print('\nForward...')
-
-        hooks = []
-        hooks2 = []
-        counter = 0
-        step = STEP
-
-        if targ_x is not None:  # Sono in train
-            for name,layer in self.resnet.named_modules():
-                # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
-                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
-                    if attach_hook(mode='last',counter=counter):
-                      hooks.append(layer.register_forward_hook(self.hook1))
-                    counter+=1
-                
-            self.resnet(targ_x)
-            
-            for h in hooks:
-                h.remove()
-            
-            # RESET COUNTER FOR SECOND HOOK
-            counter = 0
-            
-            for name,layer in self.resnet.named_modules():
-                # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha
-                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
-                    if attach_hook(mode='last',counter=counter):
-                      hooks2.append(layer.register_forward_hook(self.hook2))
-                    counter+=1
-
-            src_logits = self.resnet(src_x)
-
-            for h in hooks2:
-                h.remove()
-
-            return src_logits
-        else:
-            return self.resnet(src_x)
+    def forward(self, x):
+        return self.resnet(x)
 
 
 class EXTRAMResNet18(nn.Module):
@@ -249,9 +220,25 @@ class EXTRAMResNet18(nn.Module):
         super(EXTRAMResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
+        self.hooks = []
         self.variation = variation
 
-    def random_m_hook(self, module, input, output):
+    def attach_random_activation_maps_hooks(self):
+        counter = 0
+        for name,layer in self.resnet.named_modules():
+            # Incremento counter dopo secondo if, parto dal primo. Se incremento counter prima secondo if parto dal primo che matcha 
+            if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
+                #print(f"name: {name}, layer: {layer}")
+                if attach_hook(counter):
+                #if name == 'layer4.1.conv2':
+                    self.hooks.append(layer.register_forward_hook(self.random_activation_maps_hook))
+                    counter+=1
+    
+    def remove_hooks(self):
+        for hook in self.hooks:
+            hook.remove()
+    
+    def random_activation_maps_hook(self, module, input, output):
         # Apply the activation shaping function to the source data
         output_A = output
         # Specify the desired ratio of 1s (e.g., 0.3 for 30% of 1s)
@@ -284,25 +271,5 @@ class EXTRAMResNet18(nn.Module):
         result = output_A * M
         return result
     
-    def forward(self, x, Train=None):
-        print('\nForward...')
-
-        hooks = []
-        counter = 0
-        step = STEP
-
-        if Train:  # Sono in train
-            for name,layer in self.resnet.named_modules():
-                if isinstance(layer, nn.Conv2d) and not ('downsample' in name) and not (name == 'conv1'):
-                  if attach_hook(mode='last',counter=counter):
-                    hooks.append(layer.register_forward_hook(self.random_m_hook))
-                  counter+=1
-
-            src_logits = self.resnet(x)
-
-            for h in hooks:
-                h.remove()
-
-            return src_logits
-        else: # Sono in Test, x che mi viene passato qui è quello del test quindi target domain
-            return self.resnet(x) # THEN YOU SHOULD TEST THE MODEL ON THE TARGET DOMAINS    
+    def forward(self, x):
+        return self.resnet(x)

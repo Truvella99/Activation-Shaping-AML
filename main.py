@@ -59,6 +59,23 @@ def train(model, data):
         
         for batch_idx, batch in enumerate(tqdm(data['train'])):
             
+            # Call separately the model to firstly record the activation maps
+            # This only needed for activation_shaping_module and extension_2_activation_shaping_module
+            if CONFIG.experiment in ['activation_shaping_module','extension_2_activation_shaping_module']:
+                with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
+                    # set model to eval() to record the activations without influencing the following training
+                    model.eval()
+                    src_x, src_y, target_x = batch
+                    src_x, src_y, target_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), target_x.to(CONFIG.device)
+                    # attach the hook to record the activation maps
+                    model.attach_get_activation_maps_hooks()
+                    # perform the forward pass without keeping track of the gradient
+                    with torch.no_grad():
+                        model(target_x)
+                    # remove the previously attached hooks and set the model back to train()
+                    model.remove_hooks()
+                    model.train()
+
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
 
@@ -69,18 +86,21 @@ def train(model, data):
                 elif CONFIG.experiment in ['activation_shaping_module','extension_2_activation_shaping_module']:
                     src_x, src_y, target_x = batch
                     src_x, src_y, target_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), target_x.to(CONFIG.device)
-                    output = model(src_x, target_x)
-
-                    # Calculate cross-entropy loss
-                    loss = F.cross_entropy(output, src_y)
+                    # attach the activation shaping hook
+                    model.attach_apply_activation_maps_hooks()
+                    # perform the forward pass/compute the cross-entropy loss
+                    loss = F.cross_entropy(model(src_x), src_y)
+                    # remove the previously attached hooks
+                    model.remove_hooks()
                 elif CONFIG.experiment in ['random_activation_maps','extension_2_random_activation_maps']:
                     src_x, src_y = batch
                     src_x, src_y = src_x.to(CONFIG.device), src_y.to(CONFIG.device)
-                    output = model(src_x,Train=True)
-
-                    # Calculate cross-entropy loss
-                    loss = F.cross_entropy(output, src_y)
-
+                    # attach the random activation maps hook
+                    model.attach_random_activation_maps_hooks()
+                    # perform the forward pass/compute the cross-entropy loss
+                    loss = F.cross_entropy(model(src_x), src_y)
+                    # remove the previously attached hooks
+                    model.remove_hooks()
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
 
