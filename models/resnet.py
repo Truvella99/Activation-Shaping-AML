@@ -15,7 +15,7 @@ class BaseResNet18(nn.Module):
 ###############################################
 #                  PARAMETERS
 ###############################################
-RATIO = 0.6
+RATIO_OF_ONES = 0.6
 K = 5
 STEP = 1 # 1 = All Conv2D Layers
 MODE = 'last' # Modality that defines where attach the hook
@@ -131,7 +131,7 @@ class RAMResNet18(nn.Module):
         output_A = torch.where(output <= 0, 0.0, 1.0)
         # Specify the desired ratio of 1s (e.g., 0.3 for 30% of 1s)
         # YOU SHOULD TRY DIFFERENT RATIOS ==> CHANGE desired_ratio_of_ones FOR EXPERIMENTING
-        desired_ratio_of_ones = RATIO  # STARTING FROM M MADE OF ONLY ONES
+        desired_ratio_of_ones = RATIO_OF_ONES  # STARTING FROM M MADE OF ONLY ONES
         # Calculate the number of elements to be set to 1 based on the desired ratio
         num_ones = int(desired_ratio_of_ones * output_A.numel())
         # Create a tensor with the same shape filled with 0s
@@ -243,7 +243,7 @@ class EXTRAMResNet18(nn.Module):
         output_A = output
         # Specify the desired ratio of 1s (e.g., 0.3 for 30% of 1s)
         # YOU SHOULD TRY DIFFERENT RATIOS ==> CHANGE desired_ratio_of_ones FOR EXPERIMENTING
-        desired_ratio_of_ones = RATIO  # STARTING FROM M MADE OF ONLY ONES
+        desired_ratio_of_ones = RATIO_OF_ONES  # STARTING FROM M MADE OF ONLY ONES
         # Calculate the number of elements to be set to 1 based on the desired ratio
         num_ones = int(desired_ratio_of_ones * output_A.numel())
         # Create a tensor with the same shape filled with 0s
