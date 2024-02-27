@@ -11,6 +11,15 @@ def _clear_args(parsed_args):
 if RUN_LOCALLY:
     def parse_arguments():
         # Arguments to edit for changing the domain and the experiment, then parsed
+        ## Second parameter is the experiment
+        #
+        # first is baseline
+        # third point => is activation_shaping_module
+        # second point => is random_activation_maps
+        ## EXTENSION 2
+        #
+        # for third point => is extension_2_activation_shaping_module
+        # for second point => is extension_2_random_activation_maps
         experiment = 'baseline'
         target_domain = 'cartoon'
         experiment_name = experiment + '/' + target_domain
