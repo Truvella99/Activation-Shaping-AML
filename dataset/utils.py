@@ -8,6 +8,7 @@ import random
 from PIL import Image
 
 from globals import CONFIG
+from parse_args import RUN_LOCALLY
 
 class BaseDataset(Dataset):
     def __init__(self, examples, transform):
@@ -88,7 +89,7 @@ class SeededDataLoader(DataLoader):
             generator = torch.Generator()
             generator.manual_seed(CONFIG.seed)
 
-            worker_init_fn = seed_worker
+            worker_init_fn = None if RUN_LOCALLY else seed_worker
         
         super().__init__(dataset, batch_size, shuffle, sampler, batch_sampler, num_workers, collate_fn, 
                          pin_memory, drop_last, timeout, worker_init_fn, multiprocessing_context, generator, 
