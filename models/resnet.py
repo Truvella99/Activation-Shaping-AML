@@ -16,7 +16,7 @@ class BaseResNet18(nn.Module):
 #                  PARAMETERS
 ###############################################
 RATIO_OF_ONES = 0.6
-K = 5
+K = 0.5 # between 0 and 1 in percentage (ex. 0.2 => 20%)
 # Conv2d Layers of the Network:
 # Set the values to True to attach the hooks on the corresponding layer
 LAYERS = {
@@ -172,7 +172,7 @@ class EXTASHResNet18(nn.Module):
         # BINARIZE AND TOP K ONLY ON VARIANT 2
         if self.variation==2:
             M = torch.where(M <= 0, 0.0, 1.0)
-            k = K
+            k = K * output_A.numel()
             # Step 1: Get the indices of the top k values in A
             topk_values, topk_indices = torch.topk(output_A.view(-1), k, sorted=True)
             # Step 2: Create a mask for the top k values
@@ -226,7 +226,7 @@ class EXTRAMResNet18(nn.Module):
         # BINARIZE AND TOP K ONLY ON VARIANT 2
         if self.variation==2:
             M = torch.where(M <= 0, 0.0, 1.0)
-            k = K
+            k = K * output_A.numel()
             # Step 1: Get the indices of the top k values in A
             topk_values, topk_indices = torch.topk(output_A.view(-1), k, sorted=True)
             # Step 2: Create a mask for the top k values
