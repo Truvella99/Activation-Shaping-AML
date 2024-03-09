@@ -111,6 +111,7 @@ def train(model, data):
 
             if ((batch_idx + 1) % CONFIG.grad_accum_steps == 0) or (batch_idx + 1 == len(data['train'])):
                 scaler.step(optimizer)
+                optimizer.step()
                 optimizer.zero_grad(set_to_none=True)
                 scaler.update()
 

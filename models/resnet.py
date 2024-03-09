@@ -70,6 +70,7 @@ class ASHResNet18(nn.Module):
     def remove_hooks(self):
         for hook in self.hooks:
             hook.remove()
+        self.hooks = list()
 
     def attach_apply_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
@@ -111,6 +112,7 @@ class RAMResNet18(nn.Module):
     def remove_hooks(self):
         for hook in self.hooks:
             hook.remove()
+        self.hooks = list()
     
     def random_activation_maps_hook(self, module, input, output):
         # Apply the activation shaping function to the source data
@@ -156,6 +158,7 @@ class EXTASHResNet18(nn.Module):
     def remove_hooks(self):
         for hook in self.hooks:
             hook.remove()
+        self.hooks = list()
 
     def attach_apply_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
@@ -205,6 +208,7 @@ class EXTRAMResNet18(nn.Module):
     def remove_hooks(self):
         for hook in self.hooks:
             hook.remove()
+        self.hooks = list()
     
     def random_activation_maps_hook(self, module, input, output):
         # Apply the activation shaping function to the source data
