@@ -16,6 +16,8 @@ if RUN_LOCALLY:
         # first is baseline
         # third point => is activation_shaping_module
         # second point => is random_activation_maps
+        ## EXTENSION 1
+        # only point => is domain_generalization
         ## EXTENSION 2
         #
         # for third point => is extension_2_activation_shaping_module
