@@ -1,6 +1,16 @@
 import torch
 import torch.backends.mps
 
+###############################################
+#                  FLAGS
+###############################################
+# Flag to decide if apply data augmentation, set to True for apply it False otherwise
+DATA_AUGMENTATION = False
+# Factor that tell us how much we are data augmentating the data by generating new ones, only if DATA_AUGMENTATION set to True
+DATA_AUGMENTATION_FACTOR = 2.0
+# Flag to decide if run in local, set to True for run locally False otherwise
+RUN_LOCALLY = False
+
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get

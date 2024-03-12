@@ -100,54 +100,54 @@ def load_data():
             path, label = line[0].split('/')[1:], int(line[1])
             target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
 
-        train_dataset = BaseDataset(source_examples, transform=train_transform)
-        test_dataset = BaseDataset(target_examples, transform=test_transform)
+        train_dataset = BaseDataset(source_examples, transform=train_transform, is_test=False)
+        test_dataset = BaseDataset(target_examples, transform=test_transform, is_test=True)
 
     ######################################################
     elif CONFIG.experiment in ['activation_shaping_module','extension_2_activation_shaping_module']:
-      source_examples, target_examples = [], []
+        source_examples, target_examples = [], []
 
-      # Load source
-      with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['source_domain']}.txt"), 'r') as f:
-          lines = f.readlines()
-      for line in lines:
-          line = line.strip().split()
-          path, label = line[0].split('/')[1:], int(line[1])
-          source_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
+        # Load source
+        with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['source_domain']}.txt"), 'r') as f:
+            lines = f.readlines()
+        for line in lines:
+            line = line.strip().split()
+            path, label = line[0].split('/')[1:], int(line[1])
+            source_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
 
-      # Load target
-      with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['target_domain']}.txt"), 'r') as f:
-          lines = f.readlines()
-      for line in lines:
-          line = line.strip().split()
-          path, label = line[0].split('/')[1:], int(line[1])
-          target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
+        # Load target
+        with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['target_domain']}.txt"), 'r') as f:
+            lines = f.readlines()
+        for line in lines:
+            line = line.strip().split()
+            path, label = line[0].split('/')[1:], int(line[1])
+            target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
 
-      train_dataset = DomainAdaptationDataset(source_examples, target_examples, transform=train_transform)
-      test_dataset = BaseDataset(target_examples, transform=test_transform)
+        train_dataset = DomainAdaptationDataset(source_examples, target_examples, transform=train_transform)
+        test_dataset = BaseDataset(target_examples, transform=test_transform,is_test=True)
     
     ######################################################
     elif CONFIG.experiment in ['random_activation_maps','extension_2_random_activation_maps']:
-      source_examples, target_examples = [], []
+        source_examples, target_examples = [], []
 
-      # Load source
-      with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['source_domain']}.txt"), 'r') as f:
-          lines = f.readlines()
-      for line in lines:
-          line = line.strip().split()
-          path, label = line[0].split('/')[1:], int(line[1])
-          source_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
+        # Load source
+        with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['source_domain']}.txt"), 'r') as f:
+            lines = f.readlines()
+        for line in lines:
+            line = line.strip().split()
+            path, label = line[0].split('/')[1:], int(line[1])
+            source_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
 
-      # Load target
-      with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['target_domain']}.txt"), 'r') as f:
-          lines = f.readlines()
-      for line in lines:
-          line = line.strip().split()
-          path, label = line[0].split('/')[1:], int(line[1])
-          target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
+        # Load target
+        with open(os.path.join(CONFIG.dataset_args['root'], f"{CONFIG.dataset_args['target_domain']}.txt"), 'r') as f:
+            lines = f.readlines()
+        for line in lines:
+            line = line.strip().split()
+            path, label = line[0].split('/')[1:], int(line[1])
+            target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
 
-      train_dataset = BaseDataset(source_examples, transform=train_transform)
-      test_dataset = BaseDataset(target_examples, transform=test_transform)
+        train_dataset = BaseDataset(source_examples, transform=train_transform,is_test=False)
+        test_dataset = BaseDataset(target_examples, transform=test_transform,is_test=True)
 
     elif CONFIG.experiment in ['domain_generalization']:
         source_examples, target_examples = [], []
@@ -161,7 +161,7 @@ def load_data():
             path, label = line[0].split('/')[1:], int(line[1])
             target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
         train_dataset = DomainGeneralizationDataset(source_examples, transform=train_transform)
-        test_dataset = BaseDataset(target_examples, transform=test_transform)
+        test_dataset = BaseDataset(target_examples, transform=test_transform,is_test=True)
 
     ######################################################
 
