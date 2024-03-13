@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
-from globals import RUN_LOCALLY
+# Flag to decide if run in local, set to True for run locally False otherwise
+RUN_LOCALLY = False
 
 def _clear_args(parsed_args):
     parsed_args.experiment_args = eval(parsed_args.experiment_args)

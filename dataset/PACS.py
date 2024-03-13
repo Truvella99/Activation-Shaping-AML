@@ -100,8 +100,8 @@ def load_data():
             path, label = line[0].split('/')[1:], int(line[1])
             target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
 
-        train_dataset = BaseDataset(source_examples, transform=train_transform, is_test=False)
-        test_dataset = BaseDataset(target_examples, transform=test_transform, is_test=True)
+        train_dataset = BaseDataset(source_examples, transform=train_transform)
+        test_dataset = BaseDataset(target_examples, transform=test_transform)
 
     ######################################################
     elif CONFIG.experiment in ['activation_shaping_module','extension_2_activation_shaping_module']:
@@ -161,7 +161,7 @@ def load_data():
             path, label = line[0].split('/')[1:], int(line[1])
             target_examples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
         train_dataset = DomainGeneralizationDataset(source_examples, transform=train_transform)
-        test_dataset = BaseDataset(target_examples, transform=test_transform,is_test=True)
+        test_dataset = BaseDataset(target_examples, transform=test_transform)
 
     ######################################################
 
