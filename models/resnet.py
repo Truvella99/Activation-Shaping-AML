@@ -17,29 +17,47 @@ class BaseResNet18(nn.Module):
 ###############################################
 RATIO_OF_ONES = 0.6
 K = 0.5 # between 0 and 1 in percentage (ex. 0.2 => 20%)
-# Conv2d Layers of the Network:
+# Layers of the Network:
 # Set the values to True to attach the hooks on the corresponding layer
 LAYERS = {
     'conv1': False,
     'layer1.0.conv1': False,
+    'layer1.0.bn1': False,
     'layer1.0.conv2': False,
+    'layer1.0.bn2': False,
     'layer1.1.conv1': False,
+    'layer1.1.bn1': False,
     'layer1.1.conv2': False,
+    'layer1.1.bn2': False,
     'layer2.0.conv1': False,
+    'layer2.0.bn1': False,
     'layer2.0.conv2': False,
+    'layer2.0.bn2': False,
     'layer2.0.downsample.0': False,
     'layer2.1.conv1': False,
+    'layer2.1.bn1': False,
     'layer2.1.conv2': False,
+    'layer2.1.bn2': False,
     'layer3.0.conv1': False,
+    'layer3.0.bn1': False,
     'layer3.0.conv2': False,
+    'layer3.0.bn2': False,
     'layer3.0.downsample.0': False,
     'layer3.1.conv1': False,
+    'layer3.1.bn1': False,
     'layer3.1.conv2': False,
+    'layer3.1.bn2': False,
     'layer4.0.conv1': False,
+    'layer4.0.bn1': False,
     'layer4.0.conv2': False,
+    'layer4.0.bn2': False,
     'layer4.0.downsample.0': False,
     'layer4.1.conv1': False,
-    'layer4.1.conv2': False
+    'layer4.1.bn1': False,
+    'layer4.1.conv2': False,
+    'layer4.1.bn2': False,
+    'avgpool': False
+    #'fc': False
 }
 
 # FUNCTION TO DECIDE WHERE ATTACH THE HOOK
@@ -64,7 +82,7 @@ class ASHResNet18(nn.Module):
 
     def attach_get_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
-            if isinstance(layer, nn.Conv2d) and attach_hook(name):
+            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
                 self.hooks.append(layer.register_forward_hook(self.get_activation_maps_hook))
     
     def remove_hooks(self):
@@ -74,7 +92,7 @@ class ASHResNet18(nn.Module):
 
     def attach_apply_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
-            if isinstance(layer, nn.Conv2d) and attach_hook(name):
+            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
                 self.hooks.append(layer.register_forward_hook(self.apply_activation_maps_hook))
 
     def get_activation_maps_hook(self, module, input, output):
@@ -106,7 +124,7 @@ class RAMResNet18(nn.Module):
 
     def attach_random_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
-            if isinstance(layer, nn.Conv2d) and attach_hook(name):
+            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
                 self.hooks.append(layer.register_forward_hook(self.random_activation_maps_hook))
     
     def remove_hooks(self):
@@ -153,7 +171,7 @@ class DOMGENResNet18(nn.Module):
 
     def attach_get_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
-            if isinstance(layer, nn.Conv2d) and attach_hook(name):
+            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
                 self.hooks.append(layer.register_forward_hook(self.get_activation_maps_hook))
     
     def remove_hooks(self):
@@ -163,7 +181,7 @@ class DOMGENResNet18(nn.Module):
 
     def attach_apply_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
-            if isinstance(layer, nn.Conv2d) and attach_hook(name):
+            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
                 self.hooks.append(layer.register_forward_hook(self.apply_activation_maps_hook))
 
     def get_activation_maps_hook(self, module, input, output):
@@ -209,7 +227,7 @@ class EXTASHResNet18(nn.Module):
 
     def attach_get_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
-            if isinstance(layer, nn.Conv2d) and attach_hook(name):
+            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
                 self.hooks.append(layer.register_forward_hook(self.get_activation_maps_hook))
     
     def remove_hooks(self):
@@ -219,7 +237,7 @@ class EXTASHResNet18(nn.Module):
 
     def attach_apply_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
-            if isinstance(layer, nn.Conv2d) and attach_hook(name):
+            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
                 self.hooks.append(layer.register_forward_hook(self.apply_activation_maps_hook))
 
     def get_activation_maps_hook(self, module, input, output):
@@ -259,7 +277,7 @@ class EXTRAMResNet18(nn.Module):
 
     def attach_random_activation_maps_hooks(self):
         for name,layer in self.resnet.named_modules():
-            if isinstance(layer, nn.Conv2d) and attach_hook(name):
+            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
                 self.hooks.append(layer.register_forward_hook(self.random_activation_maps_hook))
     
     def remove_hooks(self):

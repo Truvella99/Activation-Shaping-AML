@@ -12,7 +12,7 @@ import numpy as np
 from parse_args import parse_arguments
 
 from dataset import PACS
-from models.resnet import BaseResNet18,ASHResNet18,RAMResNet18,EXTASHResNet18,EXTRAMResNet18,DOMGENResNet18
+from models.resnet import BaseResNet18,ASHResNet18,RAMResNet18,EXTASHResNet18,EXTRAMResNet18,DOMGENResNet18,LAYERS
 
 from globals import CONFIG
 
@@ -195,14 +195,22 @@ if __name__ == '__main__':
     CONFIG.save_dir = os.path.join('record', CONFIG.experiment_name)
     os.makedirs(CONFIG.save_dir, exist_ok=True)
 
+    # Setup logging file name based on the layers used
+    log_name = 'log_layers__' + '_'.join([key.replace('layer', '') for key, value in LAYERS.items() if value]) + '.txt'
+
     # Setup logging
     logging.basicConfig(
-        filename=os.path.join(CONFIG.save_dir, 'log.txt'), 
+        filename=os.path.join(CONFIG.save_dir, log_name), 
         format='%(message)s', 
         level=logging.INFO, 
         filemode='a'
     )
 
+    # Delete last.pth file if it exists
+    if os.path.exists(os.path.join(CONFIG.save_dir, 'last.pth')):
+        # Delete the file
+        os.remove(os.path.join(CONFIG.save_dir, 'last.pth'))
+    
     # Set experiment's device & deterministic behavior
     if CONFIG.cpu:
         CONFIG.device = torch.device('cpu')
