@@ -12,7 +12,7 @@ import numpy as np
 from parse_args import parse_arguments
 
 from dataset import PACS
-from models.resnet import BaseResNet18,ASHResNet18,RAMResNet18,EXTASHResNet18,EXTRAMResNet18,DOMGENResNet18,LAYERS
+from models.resnet import BaseResNet18,ASHResNet18,RAMResNet18,EXTASHResNet18,EXTRAMResNet18,DOMGENResNet18,LAYERS,K
 
 from globals import CONFIG
 
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     os.makedirs(CONFIG.save_dir, exist_ok=True)
 
     # Setup logging file name based on the layers used
-    log_name = 'log_layers__' + '_'.join([key.replace('layer', '') for key, value in LAYERS.items() if value]) + '.txt'
+    log_name = 'log_layers__' + '_'.join([key.replace('layer', '') for key, value in LAYERS.items() if value]) + "topk_" + str(K) + '.txt'
 
     # Setup logging
     logging.basicConfig(
