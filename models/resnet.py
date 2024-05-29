@@ -154,63 +154,6 @@ class RAMResNet18(nn.Module):
     
     def forward(self, x):
         return self.resnet(x)     
-
-###############################################
-#                  EXTENSION 1
-###############################################
-    
-class DOMGENResNet18(nn.Module):
-    def __init__(self):
-        super(DOMGENResNet18, self).__init__()
-        self.resnet = resnet18(weights=ResNet18_Weights)
-        self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
-        self.hooks = []
-        # now we will have three lists, one for each domain
-        # self.activations[0] self.activations[1] self.activations[2] for the three domains
-        self.activations = [[],[],[]]
-
-    def attach_get_activation_maps_hooks(self):
-        for name,layer in self.resnet.named_modules():
-            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
-                self.hooks.append(layer.register_forward_hook(self.get_activation_maps_hook))
-    
-    def remove_hooks(self):
-        for hook in self.hooks:
-            hook.remove()
-        self.hooks = list()
-
-    def attach_apply_activation_maps_hooks(self):
-        for name,layer in self.resnet.named_modules():
-            if (isinstance(layer, nn.Conv2d) or isinstance(layer,nn.BatchNorm2d) or isinstance(layer,nn.AdaptiveAvgPool2d)) and attach_hook(name):
-                self.hooks.append(layer.register_forward_hook(self.apply_activation_maps_hook))
-
-    def get_activation_maps_hook(self, module, input, output):
-        # Find the number of inserted activation maps for each domain
-        lengths = [len(domain) for domain in self.activations]
-        # Find the index of the shortest domain (the domain on which we have to attach the activation maps)
-        # if domain have the same length, it returns the first domain of the minimum value found.
-        shortest_index = lengths.index(min(lengths))
-        # append the activation maps to the corresponding domain
-        self.activations[shortest_index].append(output.clone().detach())
-
-    def apply_activation_maps_hook(self, module, input, output):
-        # Apply the activation shaping function to the source data
-        output_A = torch.where(output <= 0, 0.0, 1.0)
-        # get and binarize activation maps of the three domains
-        M_1 = self.activations[0].pop(0)
-        M_2 = self.activations[1].pop(0)
-        M_3 = self.activations[2].pop(0)
-        M_1 = torch.where(M_1 <= 0, 0.0, 1.0)
-        M_2 = torch.where(M_2 <= 0, 0.0, 1.0)
-        M_3 = torch.where(M_3 <= 0, 0.0, 1.0)
-        # concatenate the activation maps and do the product with the output
-        M = M_1 * M_2 * M_3
-        M = torch.cat((M,M,M), dim=0)
-        result = output_A * M
-        return result
-    
-    def forward(self, x):
-        return self.resnet(x) 
     
 ###############################################
 #                  EXTENSION 2

@@ -12,7 +12,7 @@ import numpy as np
 from parse_args import parse_arguments
 
 from dataset import PACS
-from models.resnet import BaseResNet18,ASHResNet18,RAMResNet18,EXTASHResNet18,EXTRAMResNet18,DOMGENResNet18,LAYERS,K
+from models.resnet import BaseResNet18,ASHResNet18,RAMResNet18,EXTASHResNet18,EXTRAMResNet18,LAYERS,K
 
 from globals import CONFIG
 
@@ -75,22 +75,6 @@ def train(model, data):
                     # remove the previously attached hooks and set the model back to train()
                     model.remove_hooks()
                     model.train()
-            elif CONFIG.experiment in ['domain_generalization']:
-                with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-                    # set model to eval() to record the activations without influencing the following training
-                    model.eval()
-                    src_x1, src_x2, src_x3, src_y = batch
-                    src_x1, src_x2, src_x3, src_y = src_x1.to(CONFIG.device), src_x2.to(CONFIG.device), src_x3.to(CONFIG.device), src_y.to(CONFIG.device)
-                    # attach the hook to record the activation maps of the three domains
-                    model.attach_get_activation_maps_hooks()
-                    # perform the forward pass for the three domains without keeping track of the gradient
-                    with torch.no_grad():
-                        model(src_x1)
-                        model(src_x2)
-                        model(src_x3)
-                    # remove the previously attached hooks and set the model back to train()
-                    model.remove_hooks()
-                    model.train()
 
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
@@ -115,16 +99,6 @@ def train(model, data):
                     model.attach_random_activation_maps_hooks()
                     # perform the forward pass/compute the cross-entropy loss
                     loss = F.cross_entropy(model(src_x), src_y)
-                    # remove the previously attached hooks
-                    model.remove_hooks()
-                elif CONFIG.experiment in ['domain_generalization']:
-                    src_x1, src_x2, src_x3, src_y = batch
-                    src_x1, src_x2, src_x3, src_y = src_x1.to(CONFIG.device), src_x2.to(CONFIG.device), src_x3.to(CONFIG.device), src_y.to(CONFIG.device)
-                    # attach the activation shaping hook
-                    model.attach_apply_activation_maps_hooks()
-                    # perform the forward pass/compute the cross-entropy loss
-                    # by concatenating in a single minibatch both src_x and src_y (3 times src_y to match the dimension)
-                    loss = F.cross_entropy(model(torch.cat((src_x1, src_x2, src_x3), dim=0)), torch.cat((src_y,src_y,src_y), dim=0))
                     # remove the previously attached hooks
                     model.remove_hooks()
 
@@ -165,8 +139,6 @@ def main():
         model = ASHResNet18()
     elif CONFIG.experiment in ['random_activation_maps']:
         model = RAMResNet18()
-    elif CONFIG.experiment in ['domain_generalization']:
-        model = DOMGENResNet18()
     elif CONFIG.experiment in ['extension_2_activation_shaping_module']:
         model = EXTASHResNet18(variation=1)
     elif CONFIG.experiment in ['extension_2_random_activation_maps']:
