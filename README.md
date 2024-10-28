@@ -2,7 +2,12 @@
 
 Project of the Advanced Machine Learning course, made in <a href='https://www.python.org/' target='_blank'>python</a> with the <a href='https://code.visualstudio.com/' target='_blank'>VsCode</a> IDE. 
 <br>The goal of the project was to address the domain shift problem, where the accuracy of the model significantly drops when other domain with different data distribution were involved. For this reason, techniques like UDA (unsupervised domain adaptation) have been used and implemented (by leveraging on the Activation Shaping Hook) in order to cope with this problem. <br>The project was made with the <a href='https://pytorch.org/' target='_blank'>Pytorch</a> framework, using <a href='https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html' target='_blank'>resnet18</a> with pretrained weights as base architecture, and both the <a href='https://code.visualstudio.com/' target='_blank'>VsCode</a> IDE and <a href='https://colab.google/' target='_blank'>Google Colab</a> as runtime environments.<br><br>
-More details can be found on the [paper](paper.pdf) and on the [project presentation](project_presentation.pdf).
+
+## Additional Project Resources
+<ul>
+    <li><a href='https://drive.google.com/file/d/1zVEYXSdafz1VA-C39NRPJjVDDte_DAlP/view?usp=sharing' target='_blank'>Paper</a></li>
+    <li><a href='https://drive.google.com/file/d/1dqrFfPu8-S_7H8a0boI5PepctmEmUCp3/view?usp=sharing' target='_blank'>Project Presentation</a></li>
+</ul>
 
 # AML 2023/2024 Project - Activation Shaping for Domain Adaptation
 Official repository for the "Activation Shaping for Domain Adaptation" project - Advanced Machine Learning Course 2023/2024 @ PoliTo
