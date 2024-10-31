@@ -9,6 +9,16 @@ Project of the Advanced Machine Learning course.
     <li><a href='https://drive.google.com/file/d/1dqrFfPu8-S_7H8a0boI5PepctmEmUCp3/view?usp=sharing' target='_blank'>Project Presentation</a></li>
 </ul>
 
+# Paper Presentation
+During the course, an additional Paper presentation was required, involving reading and understand 2 papers and presenting the main concepts (along with the results achieved) to the course class.  
+
+## Additional Paper Presentation Resources
+<ul>
+    <li><a href='https://docs.google.com/presentation/d/1N9lolmXlr9QvyxdiEjNwaXpCNfEuBKlg/edit?usp=sharing&ouid=111003210491300470403&rtpof=true&sd=true' target='_blank'>Paper Presentation</a></li>
+    <li><a href='https://drive.google.com/file/d/14RWnW__XKEW5w0OgtE4XSorHy69uJLag/view?usp=sharing' target='_blank'>Multimodal Egocentric Action Recognition</a></li>
+    <li><a href='https://drive.google.com/file/d/14RqeWoCsAPqBAzZz3-nkbpaHG-0WxH0K/view?usp=sharing' target='_blank'>Ego-Topo</a></li>
+</ul>
+
 # AML 2023/2024 Project - Activation Shaping for Domain Adaptation
 Official repository for the "Activation Shaping for Domain Adaptation" project - Advanced Machine Learning Course 2023/2024 @ PoliTo
 
